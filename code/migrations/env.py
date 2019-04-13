@@ -1,11 +1,18 @@
 from __future__ import with_statement
 
+import os
+import sys
+
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
+
+basedir = os.path.split(os.path.dirname(os.path.abspath(__file__)))[0]
+
+sys.path.append(basedir)
 
 from models import metadata
 

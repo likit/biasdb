@@ -17,8 +17,13 @@ depends_on = None
 
 
 def upgrade():
-    pass
+    op.create_table(
+        'organisms',
+        sa.Column('taxid', sa.Integer),
+        sa.Column('species', sa.String(), index=True),
+        sa.Column('parentid', sa.Integer)
+    )
 
 
 def downgrade():
-    pass
+    op.drop_table('organisms')

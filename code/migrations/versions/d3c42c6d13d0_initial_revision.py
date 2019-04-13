@@ -17,8 +17,15 @@ depends_on = None
 
 
 def upgrade():
-    pass
+    op.create_table(
+        'articles',
+        sa.Column('id', sa.Integer, primary_key=True),
+        sa.Column('pmid', sa.String(), unique=True, index=True),
+        sa.Column('pubyear', sa.Integer, nullable=False),
+        sa.Column('data', sa.JSON()),
+        sa.Column('term', sa.String()),
+    )
 
 
 def downgrade():
-    pass
+    op.drop_table('articles')

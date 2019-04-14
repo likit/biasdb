@@ -14,11 +14,15 @@ basedir = os.path.split(os.path.dirname(os.path.abspath(__file__)))[0]
 
 sys.path.append(basedir)
 
+DB_PASS = os.environ.get('POSTGRES_PASSWORD')
+
 import models
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
+
+config.set_main_option('sqlalchemy.url', 'postgresql+psycopg2://postgres:{}@pg/bactwatch'.format(DB_PASS))
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

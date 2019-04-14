@@ -17,6 +17,8 @@ services:
     build: './code'
     depends_on:
       - pg
+    environment:
+      - POSTGRES_PASSWORD
     volumes:
       - ./code:/app/code
   pg:

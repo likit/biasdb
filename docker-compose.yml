@@ -1,0 +1,33 @@
+version: "3.4"
+services:
+  web:
+    build: './web'
+    depends_on:
+      - pg
+    ports:
+      - "5000:5000"
+      - "80:5000"
+    environment:
+      - FLASK_DEBUG
+      - POSTGRES_PASSWORD
+      - SECRET_KEY
+    volumes:
+      - ./app:/app/web
+  analytics:
+    build: './code'
+    depends_on:
+      - pg
+    volumes:
+      - ./code:/app/code
+  pg:
+    image: postgres:11
+    environment:
+      - POSTGRES_PASSWORD
+    volumes:
+      - bactwatch:/var/lib/postgresql/data
+    ports:
+      - "5444:5432"
+
+volumes:
+  bactwatch:
+    external: true

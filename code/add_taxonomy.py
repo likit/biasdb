@@ -1,7 +1,8 @@
 import sys
+import re
 from sqlalchemy import create_engine, MetaData, Table
 from sqlalchemy.sql import select, insert, update
-from ete3 import NCBITaxa
+import requests
 
 engine = create_engine('postgres+psycopg2://likit@localhost/bactwatch')
 connection = engine.connect()
@@ -11,22 +12,39 @@ metadata = MetaData()
 Organism = Table('organisms', metadata, autoload=True, autoload_with=engine)
 
 
-def add_taxonomy(parentid):
-    ncbi = NCBITaxa()
-    descendants = ncbi.get_descendant_taxa(parentid)
-    for tid, taxa in ncbi.get_taxid_translator(descendants).items():
-        print('Adding ID={} {}...'.format(tid, taxa))
+def add_taxonomy():
+    gs_pattern = ('\<span class=\"genusspecies\"\>(\w+)\<\/span\>'
+                  '\s+\<span class=\'specificepithet\'\>(\w+)\<\/span\>')
+    gss_pattern = ('\<span class=\"genusspecies\"\>(\w+)\<\/span\>'
+                   '\s+\<span class=\'specificepithet\'\>(\w+)\<\/span\>'
+                   '\s+\<span class=\"genusspecies-subspecies\"\>(subsp.)\<\/span\>'
+                   '\s+\<span class=\'subspecificepithet\'\>(\w+)\<\/span\>'
+                   )
+    urls = ['http://www.bacterio.net/-allnamesac.html',
+            'http://www.bacterio.net/-allnamesdl.html',
+            'http://www.bacterio.net/-allnamesmr.html',
+            'http://www.bacterio.net/-allnamessz.html']
+
+    species_set = set()
+
+    for url in urls:
+        print('Loading from {}..'.format(url))
+        r = requests.get(url)
+        html_contents = r.text
+
+        for pat in [gs_pattern, gss_pattern]:
+            matches = re.findall(pat, html_contents)
+            for m in matches:
+                species = ' '.join(m).lower()
+                species_set.add(species)
+
+    for n, sp in enumerate(species_set, start=1):
         ins = insert(Organism).values(
-            taxid=tid,
-            species=taxa,
-            parentid=parentid,
+            id=n,
+            species=sp,
         )
         result = connection.execute(ins)
 
 
 if __name__ == '__main__':
-    parentid = sys.argv[1]
-    if parentid.isdigit():
-        add_taxonomy(int(parentid))
-    else:
-        print('Parent ID must be specified as an integer.')
+    add_taxonomy()

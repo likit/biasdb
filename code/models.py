@@ -21,7 +21,7 @@ articles = Table('articles', metadata,
 
 
 organisms = Table('organisms', metadata,
-                  Column('taxid', Integer(), primary_key=True),
+                  Column('id', Integer(), primary_key=True, autoincrement=True),
                   Column('species', String(), index=True),
                   Column('parentid', Integer()),
                   )
@@ -29,8 +29,22 @@ organisms = Table('organisms', metadata,
 organism_article = Table('organism_article', metadata,
                          Column('id', Integer(), primary_key=True),
                          Column('article_id', ForeignKey('articles.id')),
-                         Column('organism_taxid', ForeignKey('organisms.taxid'))
+                         Column('organism_id', ForeignKey('organisms.id')),
+                         Column('sentence_id', ForeignKey('sentences.id'))
                          )
+
+organism_source = Table('organism_sources', metadata,
+                           Column('id', Integer(), primary_key=True, autoincrement=True),
+                           Column('article_id', ForeignKey('articles.id')),
+                           Column('organism_id', ForeignKey('organisms.id')),
+                           Column('source', String())
+                           )
+
+sentences = Table('sentences', metadata,
+                  Column('id', Integer(), primary_key=True, autoincrement=True),
+                  Column('article_id', ForeignKey('articles.id')),
+                  Column('text', String())
+                  )
 
 
 if __name__ == '__main__':

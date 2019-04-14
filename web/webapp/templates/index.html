@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}BactWatch Index{% endblock %}
+{% block page_content %}
+<section class="hero is-info is-medium">
+  <div class="hero-head">
+    <nav class="navbar">
+      <div class="container">
+        <div class="navbar-brand">
+          <a class="navbar-item">
+            <img src="https://bulma.io/images/bulma-type-white.png" alt="Logo">
+          </a>
+          <span class="navbar-burger burger" data-target="navbarMenuHeroB">
+            <span></span>
+            <span></span>
+            <span></span>
+          </span>
+        </div>
+        <div id="navbarMenuHeroB" class="navbar-menu">
+          <div class="navbar-end">
+            <a class="navbar-item is-active">
+              Home
+            </a>
+            <a class="navbar-item">
+              Examples
+            </a>
+            <a class="navbar-item">
+              Documentation
+            </a>
+          </div>
+        </div>
+      </div>
+    </nav>
+  </div>
+
+  <div class="hero-body">
+    <div class="container has-text-centered">
+      <p class="title">
+          Welcome to BactWatch Project
+      </p>
+      <p class="subtitle">
+        Summary of bacteria identified by VITEK MS, VITEK 2, and Biotyper on <a href="https://www.ncbi.nlm.nih.gov/pubmed/"><strong>PubMed</strong></a>
+      </p>
+      <p>
+        <div class="tag">
+          Last update: April 12, 2019
+        </div>
+      </p>
+    </div>
+  </div>
+</section>
+<section class="section">
+    <div class="container">
+      <div class="columns">
+        <div class="column">
+          <div class="">
+            <div class="has-text-centered">
+              <h1 class="title is-size-4">VITEK MS</h1>
+                <p>
+                  <ul>
+                    <li>Articles (300)</li>
+                    <li>Years (1998-2019)</li>
+                    <li>Organisms (340)</li>
+                  </ul>
+                </p>
+            </div>
+          </div>
+        </div>
+        <div class="column">
+          <div class="">
+            <div class="has-text-centered">
+              <h1 class="title is-size-4">VITEK 2</h1>
+                <p>
+                <ul>
+                  <li>Articles (300)</li>
+                  <li>Years (1998-2019)</li>
+                  <li>Organisms (340)</li>
+                </ul>
+                </p>
+            </div>
+          </div>
+        </div>
+        <div class="column">
+          <div class="">
+            <div class="has-text-centered">
+              <h1 class="title is-size-4">Biotyper</h1>
+                <p>
+                    <ul>
+                      <li>Articles (300)</li>
+                      <li>Years (1998-2019)</li>
+                      <li>Organisms (340)</li>
+                    </ul>
+                </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+</section>
+{% endblock %}

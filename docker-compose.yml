@@ -8,11 +8,12 @@ services:
       - "5000:5000"
       - "80:5000"
     environment:
+      - FLASK_APP
       - FLASK_DEBUG
       - POSTGRES_PASSWORD
       - SECRET_KEY
     volumes:
-      - ./app:/app/web
+      - ./web/:/app/web
   analytics:
     build: './code'
     depends_on:

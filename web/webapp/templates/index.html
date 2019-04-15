@@ -2,13 +2,18 @@
 
 {% block title %}BactWatch Index{% endblock %}
 {% block page_content %}
-<section class="hero is-info is-medium">
+<section class="hero is-warning is-medium">
     <div class="hero-head">
         <nav class="navbar">
             <div class="container">
                 <div class="navbar-brand">
                     <a class="navbar-item">
-                        <img src="https://bulma.io/images/bulma-type-white.png" alt="Logo">
+                        <span class="icon is-large">
+                            <i class="far fa-eye has-text-white fa-2x"></i>
+                        </span>
+                        <span>
+                            <h1 class="title is-size-4 has-text-white has-text-weight-bold">BactWatch</h1>
+                        </span>
                     </a>
                     <span class="navbar-burger burger" data-target="navbarMenuHeroB">
             <span></span>
@@ -39,7 +44,7 @@
                 Welcome to BactWatch Project
             </p>
             <p class="subtitle">
-                Fast access to bacteria identified by VITEK MS, VITEK 2, and Biotyper on <a
+                Fast access to bacteria identified by automated systems on <a
                     href="https://www.ncbi.nlm.nih.gov/pubmed/"><strong>PubMed</strong></a>
             </p>
         </div>
@@ -48,9 +53,23 @@
 <section class="section">
     <div class="container">
         <div class="columns">
+            <div class="column is-half is-offset-3">
+                <article>
+                    <div class="has-text-centered">
+                        <img src="{{ url_for('static', filename='img/target.png') }}" width="100">
+                        <p class="title is-size-4">Our Goal</p>
+                    </div>
+                    <p class="has-text-justified">
+                        <span class="has-text-weight-bold">Rationale and Goal:</span>&nbsp;More and more uncommon medically-important bacteria have been identified and published on PubMed due to adoption of automated systems. The information could be useful for medical microbiologists who encounter unfamiliar bacteria and need more information to decide whether the identification is correct. The database currently provides information of bacteria that have been identified by VITEK MS, VITEK 2 or Biotyper.
+                    </p>
+                </article>
+            </div>
+        </div>
+        <div class="columns">
             <div class="column">
                 <div class="has-text-centered">
-                    <h2 class="title is-size-4">The database currently has {{ articles_count }} articles</h2>
+                    <img src="{{ url_for('static', filename='img/newspaper.png') }}" width="100">
+                    <h2 class="title is-size-4">The database currently has information from {{ articles_count }} PubMed articles</h2>
                     <h2 class="subtitle is-size-6">
                         <p>
                             Updated at April 12, 2019
@@ -123,6 +142,7 @@
         <div id="app">
             <div class="box">
                 <div class="has-text-centered">
+                    <img src="{{ url_for('static', filename='img/search-2.png') }}" width="100">
                     <h1 class="title is-size-4">Search and Explore</h1>
                 </div>
                 <br>
@@ -151,11 +171,8 @@
                         aria-page-label="Page"
                         aria-current-label="Current page">
                     <template slot-scope="props">
-                        <b-table-column field="id" label="ID" width="10" numeric>
-                            << props.row.id >>
-                        </b-table-column>
                         <b-table-column field="spname" label="Species" sortable>
-                            << props.row.spname >>
+                            <span class="is-italic"><< props.row.spname >></span>
                         </b-table-column>
                         <b-table-column field="pmid" label="PMID" sortable>
                             << props.row.pmid >>
@@ -172,7 +189,9 @@
                             <article class="media-content">
                                 <div class="content">
                                     <p><strong><< props.row.title >></strong><br>
-                                        <small>"<< props.row.sentence >>"</small>
+                                        <span class="icon"><i class="fas fa-quote-left"></i></span>
+                                        <small><< props.row.sentence >></small>
+                                        <span class="icon"><i class="fas fa-quote-right"></i></span>
                                         <br>
                                         <small><< props.row.authors >></small>&nbsp;<small><< props.row.journal >>
                                         </small>

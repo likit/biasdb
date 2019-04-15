@@ -3,98 +3,233 @@
 {% block title %}BactWatch Index{% endblock %}
 {% block page_content %}
 <section class="hero is-info is-medium">
-  <div class="hero-head">
-    <nav class="navbar">
-      <div class="container">
-        <div class="navbar-brand">
-          <a class="navbar-item">
-            <img src="https://bulma.io/images/bulma-type-white.png" alt="Logo">
-          </a>
-          <span class="navbar-burger burger" data-target="navbarMenuHeroB">
+    <div class="hero-head">
+        <nav class="navbar">
+            <div class="container">
+                <div class="navbar-brand">
+                    <a class="navbar-item">
+                        <img src="https://bulma.io/images/bulma-type-white.png" alt="Logo">
+                    </a>
+                    <span class="navbar-burger burger" data-target="navbarMenuHeroB">
             <span></span>
             <span></span>
             <span></span>
           </span>
-        </div>
-        <div id="navbarMenuHeroB" class="navbar-menu">
-          <div class="navbar-end">
-            <a class="navbar-item is-active">
-              Home
-            </a>
-            <a class="navbar-item">
-              Examples
-            </a>
-            <a class="navbar-item">
-              Documentation
-            </a>
-          </div>
-        </div>
-      </div>
-    </nav>
-  </div>
-
-  <div class="hero-body">
-    <div class="container has-text-centered">
-      <p class="title">
-          Welcome to BactWatch Project
-      </p>
-      <p class="subtitle">
-        Summary of bacteria identified by VITEK MS, VITEK 2, and Biotyper on <a href="https://www.ncbi.nlm.nih.gov/pubmed/"><strong>PubMed</strong></a>
-      </p>
-      <p>
-        <div class="tag">
-          Last update: April 12, 2019
-        </div>
-      </p>
+                </div>
+                <div id="navbarMenuHeroB" class="navbar-menu">
+                    <div class="navbar-end">
+                        <a class="navbar-item is-active">
+                            Home
+                        </a>
+                        <a class="navbar-item">
+                            Examples
+                        </a>
+                        <a class="navbar-item">
+                            Documentation
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </nav>
     </div>
-  </div>
+
+    <div class="hero-body">
+        <div class="container has-text-centered">
+            <p class="title">
+                Welcome to BactWatch Project
+            </p>
+            <p class="subtitle">
+                Fast access to bacteria identified by VITEK MS, VITEK 2, and Biotyper on <a
+                    href="https://www.ncbi.nlm.nih.gov/pubmed/"><strong>PubMed</strong></a>
+            </p>
+        </div>
+    </div>
 </section>
 <section class="section">
     <div class="container">
-      <div class="columns">
-        <div class="column">
-          <div class="">
-            <div class="has-text-centered">
-              <h1 class="title is-size-4">VITEK MS</h1>
-                <p>
-                  <ul>
-                    <li>Articles (300)</li>
-                    <li>Years (1998-2019)</li>
-                    <li>Organisms (340)</li>
-                  </ul>
-                </p>
+        <div class="columns">
+            <div class="column">
+                <div class="has-text-centered">
+                    <h2 class="title is-size-4">The database currently has {{ articles_count }} articles</h2>
+                    <h2 class="subtitle is-size-6">
+                        <p>
+                            Updated at April 12, 2019
+                        </p>
+                    </h2>
+                </div>
             </div>
-          </div>
         </div>
-        <div class="column">
-          <div class="">
-            <div class="has-text-centered">
-              <h1 class="title is-size-4">VITEK 2</h1>
-                <p>
-                <ul>
-                  <li>Articles (300)</li>
-                  <li>Years (1998-2019)</li>
-                  <li>Organisms (340)</li>
-                </ul>
-                </p>
+        <div class="columns">
+            <div class="column">
+                <div class="notification">
+                    <div class="has-text-centered">
+                        <h1 class="title is-size-4">VITEK MS</h1>
+                        <p>
+                        <ul>
+                            <li>Articles ({{ summary['VITEK MS']['articles']|length }})</li>
+                            <li>Years ({{ summary['VITEK MS']['years']|min }}-{{ summary['VITEK MS']['years']|max }})
+                            </li>
+                            <li>Organisms ({{ summary['VITEK MS']['organisms']|length }})</li>
+                        </ul>
+                        </p>
+                    </div>
+                </div>
             </div>
-          </div>
-        </div>
-        <div class="column">
-          <div class="">
-            <div class="has-text-centered">
-              <h1 class="title is-size-4">Biotyper</h1>
-                <p>
-                    <ul>
-                      <li>Articles (300)</li>
-                      <li>Years (1998-2019)</li>
-                      <li>Organisms (340)</li>
-                    </ul>
-                </p>
+            <div class="column">
+                <div class="notification">
+                    <div class="has-text-centered">
+                        <h1 class="title is-size-4">VITEK 2</h1>
+                        <p>
+                        <ul>
+                            <li>Articles ({{ summary['VITEK 2']['articles']|length }})</li>
+                            <li>Years ({{ summary['VITEK 2']['years']|min }}-{{ summary['VITEK 2']['years']|max }})</li>
+                            <li>Organisms ({{ summary['VITEK 2']['organisms']|length }})</li>
+                        </ul>
+                        </p>
+                    </div>
+                </div>
             </div>
-          </div>
+            <div class="column">
+                <div class="notification">
+                    <div class="has-text-centered">
+                        <h1 class="title is-size-4">Biotyper</h1>
+                        <p>
+                        <ul>
+                            <li>Articles ({{ summary['biotyper']['articles']|length }})</li>
+                            <li>Years ({{ summary['biotyper']['years']|min }}-{{ summary['biotyper']['years']|max }})
+                            </li>
+                            <li>Organisms ({{ summary['biotyper']['organisms']|length }})</li>
+                        </ul>
+                        </p>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
+        <div class="columns">
+            <div class="column">
+                <h2 class="subtitle is-size-7">
+                    <p>
+                        *Articles were searched using keyword "VITEK MS, VITEK 2 and biotyper".
+                        Then they were downloaded and processed using text mining techniques to
+                        extract bacterial names and relevant information.
+                    </p>
+                </h2>
+            </div>
+        </div>
     </div>
 </section>
+<section class="section">
+    <div class="container">
+        <div id="app">
+            <div class="box">
+                <div class="has-text-centered">
+                    <h1 class="title is-size-4">Search and Explore</h1>
+                </div>
+                <br>
+                <b-input v-model="query" placeholder="Search genus and species"></b-input>
+                <br>
+                <b-field grouped group-multiline>
+                    <div class="control">
+                        <b-switch v-model="VitekMS">VITEK MS</b-switch>
+                    </div>
+                    <div class="control">
+                        <b-switch v-model="Vitek2">VITEK 2</b-switch>
+                    </div>
+                    <div class="control">
+                        <b-switch v-model="Biotyper">Biotyper</b-switch>
+                    </div>
+                </b-field>
+                <b-table
+                        :data="fltOrgList"
+                        ref="table"
+                        paginated
+                        per-page="10"
+                        detailed
+                        detail-key="id"
+                        aria-next-label="Next page"
+                        aria-previous-label="Previous page"
+                        aria-page-label="Page"
+                        aria-current-label="Current page">
+                    <template slot-scope="props">
+                        <b-table-column field="id" label="ID" width="10" numeric>
+                            << props.row.id >>
+                        </b-table-column>
+                        <b-table-column field="spname" label="Species" sortable>
+                            << props.row.spname >>
+                        </b-table-column>
+                        <b-table-column field="pmid" label="PMID" sortable>
+                            << props.row.pmid >>
+                        </b-table-column>
+                        <b-table-column field="term" label="Term" sortable>
+                            << props.row.term >>
+                        </b-table-column>
+                        <b-table-column field="year" label="Year" numeric sortable>
+                            << props.row.year >>
+                        </b-table-column>
+                    </template>
+                    <template slot="detail" slot-scope="props">
+                        <article class="media">
+                            <article class="media-content">
+                                <div class="content">
+                                    <p><strong><< props.row.title >></strong><br>
+                                        <small>"<< props.row.sentence >>"</small>
+                                        <br>
+                                        <small><< props.row.authors >></small>&nbsp;<small><< props.row.journal >>
+                                        </small>
+                                        <small><a v-bind:href="'https://www.ncbi.nlm.nih.gov/pubmed/'+props.row.pmid"
+                                                  class="button is-small is-primary">PubMed</a></small>
+                                    </p>
+                                </div>
+                            </article>
+                        </article>
+                    </template>
+                </b-table>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    var vm = new Vue({
+        'el': '#app',
+        'delimiters': ['<<', '>>'],
+        data() {
+            return {
+                orgList: {{ organism_list | tojson | safe }},
+            query: '',
+                Biotyper
+        :
+            true,
+                VitekMS
+        :
+            true,
+                Vitek2
+        :
+            true
+        }
+        },
+        computed: {
+            fltOrgList: function () {
+                return this.orgList.filter((option) => {
+                    var terms = [];
+                    if (this.Biotyper) {
+                        terms.push('biotyper');
+                    }
+                    if (this.VitekMS) {
+                        terms.push('VITEK MS');
+                    }
+                    if (this.Vitek2) {
+                        terms.push('VITEK 2');
+                    }
+                    var included = terms.indexOf(option.term) >= 0;
+                    var match = option.spname.toString().toLowerCase().indexOf(this.query.toLowerCase()) >= 0;
+                    return included && match;
+                })
+            }
+        }
+    })
+</script>
 {% endblock %}

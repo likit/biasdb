@@ -24,6 +24,7 @@ organisms = Table('organisms', metadata,
                   Column('id', Integer(), primary_key=True, autoincrement=True),
                   Column('species', String(), index=True),
                   Column('parentid', Integer()),
+                  Column('wikiurl', String())
                   )
 
 organism_article = Table('organism_article', metadata,
@@ -45,6 +46,12 @@ sentences = Table('sentences', metadata,
                   Column('article_id', ForeignKey('articles.id')),
                   Column('text', String())
                   )
+
+organism_wiki_link = Table('organism_wikis', metadata,
+                      Column('id', Integer(), primary_key=True, autoincrement=True),
+                      Column('organism_id', ForeignKey('organisms.id')),
+                      Column('link_id', ForeignKey('organisms.id')),
+                      )
 
 
 if __name__ == '__main__':

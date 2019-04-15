@@ -1,12 +1,12 @@
-import sys
+import os
 import re
 from sqlalchemy import create_engine, MetaData, Table
-from sqlalchemy.sql import select, insert, and_, or_
-from nltk.corpus import stopwords
+from sqlalchemy.sql import select, insert
 from nltk.tokenize import sent_tokenize
-from collections import namedtuple
 
-engine = create_engine('postgres+psycopg2://likit@localhost/bactwatch')
+POSTGRES_PASSWORD = os.environ.get('POSTGRES_PASSWORD')
+
+engine = create_engine('postgres+psycopg2://postgres:{}@pg/bactwatch'.format(POSTGRES_PASSWORD))
 connection = engine.connect()
 
 metadata = MetaData()
@@ -21,9 +21,7 @@ Sentence = Table('sentences', metadata, autoload=True, autoload_with=engine)
 def extract_organism():
     s = select([Article])
     for n, ar in enumerate(connection.execute(s), start=1):
-        abstract = ar['data'].get('AB', '')
-        abstract = re.sub('\sand\s|\sor\s|\swith\s', ' | ',
-                          abstract)  # replace some words with a pipe to prevent regex matching across multiple names
+        abstract = ar['data'].get('TI', '') + '\n' + ar['data'].get('AB', '')
         patterns = ['([A-Z]\w+)\s(\w+)\s(subsp\.?|subspecies)\s(\S+)', '([A-Z]\w+)\s(\w+)']
         for sent in sent_tokenize(abstract):
             ins = insert(Sentence).values(
@@ -32,8 +30,10 @@ def extract_organism():
             )
             result = connection.execute(ins)
             sent_id = result.inserted_primary_key[0]
-            for p in patterns[:1]:
-                sps = re.findall(p, sent)
+            for p in patterns:
+                _sent = re.sub('\sand\s|\sor\s|\swith\s', ' | ',
+                           sent)  # replace some words with a pipe to prevent regex matching across multiple names
+                sps = re.findall(p, _sent)
                 for tx in sps:
                     print(' '.join(tx))
                     s = select([Organism]).where(Organism.c.species == '{}'.format(' '.join([t.lower() for t in tx])))

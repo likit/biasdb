@@ -1,10 +1,162 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends "base.html" %}
 
-</body>
-</html>
+{% block title %}BIASDB: Profile{% endblock %}
+
+{% block styles %}
+    {{ super() }}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.css" />
+    <style type="text/css">
+        #network {
+            width: 600px;
+            height: 600px;
+        }
+    </style>
+{% endblock %}
+
+{% block page_content %}
+<section class="hero is-warning">
+    <div class="hero-head">
+        <nav class="navbar">
+            <div class="container">
+                <div class="navbar-brand">
+                    <a class="navbar-item">
+                        <span class="icon is-large">
+                            <i class="fas fa-database fa-2x"></i>
+                        </span>
+                        <span>
+                            <h1 class="title is-size-4 has-text-weight-bold">BIASDB</h1>
+                        </span>
+                    </a>
+                    <span class="navbar-burger burger" data-target="navbarMenuHeroB">
+            <span></span>
+            <span></span>
+            <span></span>
+          </span>
+                </div>
+                <div id="navbarMenuHeroB" class="navbar-menu">
+                    <div class="navbar-end">
+                        <a class="navbar-item is-active" href="/">
+                            Home
+                        </a>
+                        <a class="navbar-item">
+                            Examples
+                        </a>
+                        <a class="navbar-item">
+                            Documentation
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </div>
+
+    <div class="hero-body">
+        <div class="container has-text-centered">
+            <img src="{{ url_for('static', filename='img/bacteria-2.png') }}" width="100">
+            <p class="title">
+                {{ spname }}
+            </p>
+        </div>
+    </div>
+</section>
+<div class="section">
+    <div class="container">
+        <div class="columns">
+            <div class="column">
+                <p>
+                    <strong>Wikipedia Summary</strong>
+                </p>
+                <p class="has-text-justified">
+                    {{ wiki_summary }}
+                    {% if wiki_page %}
+                    <small><a href="{{ wiki_page.url }}">Read more</a></small>
+                    {% endif %}
+                </p>
+                <br>
+                <p>
+                    <strong>Related Bacteria</strong>
+                </p>
+                <p>
+                    <table class="table is-fullwidth is-striped">
+                        <thead>
+                            <th>Name</th>
+                            <th>Articles</th>
+                        </thead>
+                        <tbody>
+                            {% for organism in species_article_links|sort(attribute='spname') %}
+                            <tr>
+                                <td><a href="{{ url_for('show_profile', bactid=organism.id) }}">
+                                    <span class="is-italic">{{ organism.spname }}</span></a>
+                                </td>
+                                <td><a>{{ species_article_links[organism]|length }}</a></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </p>
+            </div>
+            <div class="column">
+                <p>
+                    <strong>PubMed Timeline</strong>
+                    <canvas id="timeline"></canvas>
+                    <span>The number of articles of up to five randomly selected bacteria are shown as a timeline from 2000-present.</span>
+                </p>
+                <br>
+                <div class="is-centered">
+                    <strong>Relationships</strong>
+                    <div id="network"></div>
+                    <p>
+                        The relationships of <span class="is-italic">{{ spname }}</span> and other bacteria that co-occur in Wikipedia and PubMed articles.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"></script>
+<script>
+    var nodes = {{ nodes|tojson|safe }};
+    var edges = {{ edges|tojson|safe }};
+    var network = null;
+
+    function draw() {
+        var container = document.getElementById('network');
+        var data = {
+            nodes: nodes,
+            edges: edges
+        };
+        var options = {
+            nodes: {
+                shape: 'dot',
+                scaling: {
+                    label: {
+                        min:8,
+                        max:20
+                    }
+                }
+            }
+        };
+        network = new vis.Network(container, data, options);
+    }
+    draw();
+</script>
+<script>
+    var ctx = document.getElementById('timeline').getContext('2d');
+    var chart = new Chart(ctx, {
+        // The type of chart we want to create
+        type: 'line',
+
+        // The data for our dataset
+        data: {
+            labels: {{ years|tojson|safe }},
+            datasets: {{ article_timeline_data|tojson|safe }},
+        },
+        // Configuration options go here
+        options: {}
+    });
+</script>
+{% endblock %}

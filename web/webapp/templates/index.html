@@ -1,18 +1,18 @@
 {% extends "base.html" %}
 
-{% block title %}BactWatch Index{% endblock %}
+{% block title %}BIASDB: Home{% endblock %}
 {% block page_content %}
-<section class="hero is-warning is-medium">
+<section class="hero is-warning">
     <div class="hero-head">
         <nav class="navbar">
             <div class="container">
                 <div class="navbar-brand">
-                    <a class="navbar-item">
+                    <a class="navbar-item" href="/">
                         <span class="icon is-large">
-                            <i class="far fa-eye has-text-white fa-2x"></i>
+                            <i class="fas fa-database fa-2x"></i>
                         </span>
                         <span>
-                            <h1 class="title is-size-4 has-text-white has-text-weight-bold">BactWatch</h1>
+                            <h1 class="title is-size-4 has-text-weight-bold">BIASDB</h1>
                         </span>
                     </a>
                     <span class="navbar-burger burger" data-target="navbarMenuHeroB">
@@ -40,11 +40,14 @@
 
     <div class="hero-body">
         <div class="container has-text-centered">
+            <p>
+                <img src="{{ url_for('static', filename='img/petri-dish.png') }}" width="120">
+            </p>
             <p class="title">
-                Welcome to BactWatch Project
+                Welcome to BIAS Database
             </p>
             <p class="subtitle">
-                Fast access to bacteria identified by automated systems on <a
+                Quick access to Bacteria Identified by Automated Systems (BIAS) on <a
                     href="https://www.ncbi.nlm.nih.gov/pubmed/"><strong>PubMed</strong></a>
             </p>
         </div>
@@ -60,7 +63,7 @@
                         <p class="title is-size-4">Our Goal</p>
                     </div>
                     <p class="has-text-justified">
-                        <span class="has-text-weight-bold">Rationale and Goal:</span>&nbsp;More and more uncommon medically-important bacteria have been identified and published on PubMed due to adoption of automated systems. The information could be useful for medical microbiologists who encounter unfamiliar bacteria and need more information to decide whether the identification is correct. The database currently provides information of bacteria that have been identified by VITEK MS, VITEK 2 or Biotyper.
+                        <span class="has-text-weight-bold">Rationale and Goal:</span>&nbsp;More and more uncommon medically-important bacteria have been identified and published on PubMed due to adoption of automated systems. This project aims to collect and provide the information that could be useful for medical microbiologists when encounter unfamiliar bacteria and need more information to decide whether the identification is correct. The database is updated monthly to monitor newly reported bacteria. It currently stores information of bacteria that have been identified by VITEK MS, VITEK 2 or Biotyper.
                     </p>
                 </article>
             </div>
@@ -69,7 +72,7 @@
             <div class="column">
                 <div class="has-text-centered">
                     <img src="{{ url_for('static', filename='img/newspaper.png') }}" width="100">
-                    <h2 class="title is-size-4">The database currently has information from {{ articles_count }} PubMed articles</h2>
+                    <h2 class="title is-size-4">Total Articles : {{ articles_count }}</h2>
                     <h2 class="subtitle is-size-6">
                         <p>
                             Updated at April 12, 2019
@@ -197,6 +200,8 @@
                                         </small>
                                         <small><a v-bind:href="'https://www.ncbi.nlm.nih.gov/pubmed/'+props.row.pmid"
                                                   class="button is-small is-primary">PubMed</a></small>
+                                        <small><a v-bind:href="'/bacteria/profile/'+props.row.spid"
+                                                  class="button is-small is-info">Profile</a></small>
                                     </p>
                                 </div>
                             </article>

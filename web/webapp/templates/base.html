@@ -3,30 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <title>{% block title %}{% endblock %}</title>
-    <link rel="stylesheet" href="https://unpkg.com/bulmaswatch/lumen/bulmaswatch.min.css">
-    <link rel="stylesheet" href="https://cdn.materialdesignicons.com/2.5.94/css/materialdesignicons.min.css">
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.2.0/css/all.css">
-    <link rel="stylesheet" href="https://unpkg.com/buefy/dist/buefy.min.css">
+    {% block styles %}
+        <link rel="stylesheet" href="https://unpkg.com/bulmaswatch/lumen/bulmaswatch.min.css">
+        <link rel="stylesheet" href="https://cdn.materialdesignicons.com/2.5.94/css/materialdesignicons.min.css">
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.2.0/css/all.css">
+        <link rel="stylesheet" href="https://unpkg.com/buefy/dist/buefy.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.css"/>
+    {% endblock %}
 </head>
 <body>
-{% block page_content %}
-{% endblock %}
-
-{% block scripts %}
-    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.js"></script>
-    <script src="https://unpkg.com/buefy/dist/buefy.min.js"></script>
-{% endblock %}
-</body>
-<footer class="footer">
-    <div class="container">
-        <div class="has-text-centered">
-            <p>This project is partially supported by the Center of Excellence on Medical Biotechnology (CEMB), the S&T Postgraduate Education and Research Development Office (PERDO) and the Office of Higher Education Commission (OHEC), Thailand.</p>
-            <div>Icons made by <a href="https://www.flaticon.com/authors/freepik" title="Freepik">Freepik</a> from
-                <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a> is licensed by
-                <a href="http://creativecommons.org/licenses/by/3.0/"
-                   title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a>
+    {% block page_content %}
+    {% endblock %}
+    <footer class="footer">
+        <div class="container">
+            <div class="has-text-centered">
+                <p>This project is partially supported by the Center of Excellence on Medical Biotechnology (CEMB), the S&T Postgraduate Education and Research Development Office (PERDO) and the Office of Higher Education Commission (OHEC), Thailand.</p>
+                <div>Icons made by <a href="https://www.flaticon.com/authors/freepik" title="Freepik">Freepik</a> from
+                    <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a> is licensed by
+                    <a href="http://creativecommons.org/licenses/by/3.0/"
+                       title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a>
+                </div>
             </div>
         </div>
-    </div>
-</footer>
+    </footer>
+    {% block scripts %}
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.js"></script>
+    <script src="https://unpkg.com/buefy/dist/buefy.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js"></script>
+    {% endblock %}
+</body>
 </html>

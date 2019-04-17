@@ -3,10 +3,11 @@ from collections import defaultdict
 from . import app
 from flask import render_template, url_for
 from sqlalchemy import create_engine, MetaData, Table
-from sqlalchemy.sql import select, func
+from sqlalchemy.sql import select, func, and_
 import wikipedia
 from collections import namedtuple
 from datetime import datetime
+from sklearn.feature_extraction.text import TfidfVectorizer
 import random
 
 Species = namedtuple('Species', ['id', 'spname'])
@@ -23,6 +24,11 @@ organisms = Table('organisms', metadata, autoload=True, autoload_with=engine)
 org_source = Table('organism_sources', metadata, autoload=True, autoload_with=engine)
 sentences = Table('sentences', metadata, autoload=True, autoload_with=engine)
 organism_wikis = Table('organism_wikis', metadata, autoload=True, autoload_with=engine)
+bigram_tbl = Table('bigrams', metadata, autoload=True, autoload_with=engine)
+
+bigram_idf = {}
+for bg in connection.execute(select([bigram_tbl])):
+    bigram_idf[bg.text] = bg.tfidf
 
 
 def get_summary():
@@ -78,6 +84,23 @@ def get_organism_list():
             data.append(item)
     return data
 
+vectorizer_word = TfidfVectorizer(stop_words='english', ngram_range=(1,1), analyzer='word', min_df=1, max_df=0.8)
+all_abstracts = []
+for rp in connection.execute(select([articles.c.data['AB'].label('abstract')])):
+    all_abstracts.append(rp.abstract or '')
+
+vectorizer_word.fit(all_abstracts)
+
+def calculate_normalized_idf(bigram):
+    bividf = bigram_idf[bigram]
+    if bividf:
+        f, s = bigram.split()
+        fidf = vectorizer_word.idf_[vectorizer_word.vocabulary_[f]]
+        sidf = vectorizer_word.idf_[vectorizer_word.vocabulary_[s]]
+        newscore = fidf * sidf / float(bividf)
+    else:
+        newscore = 0
+    return newscore
 
 @app.route('/')
 def index():
@@ -146,48 +169,98 @@ def show_profile(bactid=None):
         in_out_bound_links += 1
 
     article_links = defaultdict(set)
-    species_article_links = defaultdict(set)
 
-    for row in connection.execute(select([org_articles]).where(org_articles.c.organism_id == bactid)):
-        for s in connection.execute(select([org_articles]).where(org_articles.c.article_id == row.article_id)):
-            if row.organism_id != s.organism_id:
-                article_links[s.organism_id].add(row.article_id)
+    abstract_recs = defaultdict(set)
 
-    nodes = [{
-            'id': bactid,
-            'label': bacteria.species.capitalize(),
-            'shape': 'circularImage',
-            'image': url_for('static', filename='img/bacteria.png'),
-            'color': '#ff6600',
-         }
-    ]
+    bact_related_articles = []
+    for row in connection.execute(
+            select([articles.c.id.label('pid'),
+                    articles.c.data['AB'].label('abstract'),
+                    articles.c.data['TI'].label('title'),
+                    articles.c.data['AU'].label('authors'),
+                    articles.c.data['TA'].label('journal'),
+                    articles.c.pubyear,
+                    org_articles.c.article_id,
+                    org_articles.c.organism_id,
+                    organisms.c.species]).select_from(
+                articles.join(org_articles).join(organisms)).where(
+                org_articles.c.organism_id == bactid)):
+        bact_related_articles.append(row)
+
+        for s in connection.execute(select(
+                [org_articles, organisms.c.species, organisms.c.id.label('oid')]) \
+                .select_from(org_articles.join(organisms)).where(
+            org_articles.c.article_id == row.article_id)):
+            # if row.organism_id != s.organism_id:
+            article_links[s.organism_id].add((row.article_id, s.species, s.oid))
+            abstract_recs[s.article_id].add((s.organism_id, s.species))
+
+    important_keyword_items = {}
+    for pid, orgs in abstract_recs.items():
+        related_bigrams = connection.execute(
+            select([bigram_tbl]).select_from(
+                bigram_tbl.join(org_articles, org_articles.c.article_id==bigram_tbl.c.article_id)).where(and_(
+                bigram_tbl.c.article_id == pid, org_articles.c.organism_id == bactid)
+            )).fetchall()
+        for bigram in related_bigrams:
+            if bigram.tfidf:
+                important_keyword_items[bigram.id] = (bigram.id, bigram.text, bigram.tfidf,
+                                                      orgs, calculate_normalized_idf(bigram.text))
+
+    important_keyword_items = sorted(important_keyword_items.values(),
+                                     key=lambda x: x[-1], reverse=True)[:20]
+    # important_keyword_items = sorted(important_keyword_items, key=lambda x: float(x[2]), reverse=True)[:20]
+    important_keywords = ((w[1].title(), round(float(w[-1]),2), w[3])
+                              for w in important_keyword_items)
+
+    nodes = []
     edges = []
+    _nodes = set()
+    for kw in important_keyword_items:
+        bid, btext, bscore, borgs, nbscore = kw
+        bscore = round(float(bscore), 2)
+        # keyword nodes
+        if bid not in _nodes:
+            _nodes.add(bid)
+            nodes.append({
+                'id': bid,
+                'label': btext,
+                'color': '#eef442',
+                'size': 4,
+                'font': {'size': 16, 'background': '#eef442'}
+            })
+        for org in borgs:
+            # pathogen nodes
+            if org[0] not in _nodes:
+                _nodes.add(org[0])
+                nodes.append({
+                    'id': org[0],
+                    'label': org[1].capitalize(),
+                    'shape': 'circularImage',
+                    'image': url_for('static', filename='img/bacteria.png'),
+                    'color': '#ff6600' if org[0] == bactid else '#42f489',
+                    'font': {'background': '#ff6600', 'color': 'white', 'size': 18}
+                })
+            edges.append({
+                'from': org[0],
+                'to': bid,
+                'title': btext,
+                'color': {
+                    'color': '#d1560a' if org[0] == bactid else '#04894b',
+                    'highlight': '#ffcc00',
+                    'opacity': 1.0
+                },
+            })
+
     common_links = set(wiki_links.keys()).intersection(set(article_links.keys()))
+    species_article_links = defaultdict(set)
     for sp in common_links:
-        r = connection.execute(select([organisms]).where(organisms.c.id == sp)).first()
-        num_articles = len(article_links.get(r.id, []))
-        species_article_links[Species(r.id, r.species.capitalize())] = article_links[r.id]
-        opacity = 0.8
-        node = {
-            'id': r.id,
-            'value': num_articles,
-            'label': r.species.capitalize(),
-            'shape': 'circularImage',
-            'image': url_for('static', filename='img/bacteria.png'),
-            'color': '#ffcc00',
-        }
-        nodes.append(node)
-        edge = {
-            'from': r.id,
-            'to': bactid,
-            'value': num_articles,
-            'title': '{} articles'.format(num_articles),
-            'color': {'color': '#0855c9', 'highlight': '#ffcc00', 'opacity': opacity},
-        }
-        edges.append(edge)
+        the_links = article_links[sp]
+        for lnk in the_links:
+            species_article_links[Species(lnk[2], lnk[1].capitalize())].add(lnk[0])
 
     try:
-        wiki_summary = wikipedia.summary(bacteria.species.capitalize(), sentences=6)
+        wiki_summary = wikipedia.summary(bacteria.species.capitalize(), sentences=10)
         wiki_page = wikipedia.page(bacteria.species.capitalize())
     except (wikipedia.exceptions.PageError, wikipedia.exceptions.DisambiguationError):
         wiki_summary = 'Wikipedia Summary not Available'
@@ -196,12 +269,14 @@ def show_profile(bactid=None):
     article_timeline = {}
     years = range(2000, datetime.now().year + 1)
     for sid in common_links:
+        if sid == bactid:
+            continue
         s = select([organisms.c.species, articles.c.pubyear]).select_from(
             articles.join(org_articles).join(organisms)).where(org_articles.c.organism_id == sid)
         for row in connection.execute(s):
             if row.pubyear > 1999:
                 if row.species not in article_timeline:
-                    article_timeline[row.species] = dict([(y,0) for y in years])
+                    article_timeline[row.species] = dict([(y, 0) for y in years])
                 article_timeline[row.species][row.pubyear] += 1
 
     s = select([organisms.c.species, articles.c.pubyear]).select_from(
@@ -209,11 +284,14 @@ def show_profile(bactid=None):
     for row in connection.execute(s):
         if row.pubyear > 1999:
             if row.species not in article_timeline:
-                article_timeline[row.species] = dict([(y,0) for y in years])
+                article_timeline[row.species] = dict([(y, 0) for y in years])
             article_timeline[row.species][row.pubyear] += 1
 
     article_timeline_data = []
-    sp_choices = random.choices(list(article_timeline), k=4)
+    if len(article_links) > 4:
+        sp_choices = random.choices(list(article_timeline), k=4)
+    else:
+        sp_choices = list(article_timeline)
     sp_choices.append(bacteria.species)
     colors = [
         'rgb(254, 178, 54)',
@@ -238,5 +316,7 @@ def show_profile(bactid=None):
                            wiki_page=wiki_page,
                            species_article_links=species_article_links,
                            article_timeline_data=article_timeline_data,
-                           years=list(years)
+                           years=list(years),
+                           important_keywords=important_keywords,
+                           bact_related_articles=bact_related_articles,
                            )

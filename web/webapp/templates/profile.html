@@ -7,8 +7,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.css" />
     <style type="text/css">
         #network {
-            width: 600px;
-            height: 600px;
+            width: 90%;
+            height: 900px;
+            border: 1px solid lightgray;
         }
     </style>
 {% endblock %}
@@ -63,18 +64,62 @@
     <div class="container">
         <div class="columns">
             <div class="column">
+                <div class="is-centered">
+                    <strong>Relationships</strong>
+                    <div id="network"></div>
+                    <p>
+                        The relationships of <span class="is-italic">{{ spname }}</span> and other bacteria that co-occur in Wikipedia and PubMed articles.
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="columns">
+            <div class="column">
+                <p>
+                    <strong>PubMed Article Timeline</strong>
+                    <canvas id="timeline"></canvas>
+                    <span>The number of articles of up to five randomly selected bacteria are shown as a timeline from 2000-present.</span>
+                </p>
+                <br>
+                <p>
+                    <table class="table is-narrow">
+                        <thead>
+                        <th>PubMed Articles</th>
+                        </thead>
+                        <tbody>
+                        {% for ar in bact_related_articles %}
+                        <tr>
+                            <td>
+                                <strong>{{ ar.title }}</strong>
+                <p class="notification">
+                    {% if ar.abstract %}
+                    <small>{{ ar.abstract|truncate(400) }}
+                        {% else %}
+                        <small>{{ 'No abstract available.' }}
+                            {% endif %}
+                            <a class="is-small button is-info" href="https://www.ncbi.nlm.nih.gov/pubmed/{{ ar.pid }}">Read more</a>
+                </p>
+                &nbsp;{{ ar.journal }}&nbsp;,{{ ar.pubyear }}&nbsp;{{ ar.authors }}</small>
+                </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                </p>
+            </div>
+            <div class="column">
                 <p>
                     <strong>Wikipedia Summary</strong>
                 </p>
                 <p class="has-text-justified">
                     {{ wiki_summary }}
                     {% if wiki_page %}
-                    <small><a href="{{ wiki_page.url }}">Read more</a></small>
+                    <small><a href="{{ wiki_page.url }}" class="is-small button is-info">Read more</a></small>
                     {% endif %}
                 </p>
                 <br>
                 <p>
-                    <strong>Related Bacteria</strong>
+                    <strong>Related Bacteria from PubMed Articles</strong>
                 </p>
                 <p>
                     <table class="table is-fullwidth is-striped">
@@ -88,27 +133,35 @@
                                 <td><a href="{{ url_for('show_profile', bactid=organism.id) }}">
                                     <span class="is-italic">{{ organism.spname }}</span></a>
                                 </td>
-                                <td><a>{{ species_article_links[organism]|length }}</a></td>
+                                <td>{{ species_article_links[organism]|length }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </p>
-            </div>
-            <div class="column">
                 <p>
-                    <strong>PubMed Timeline</strong>
-                    <canvas id="timeline"></canvas>
-                    <span>The number of articles of up to five randomly selected bacteria are shown as a timeline from 2000-present.</span>
+                    <strong>Predicted Keywords from PubMed Articles</strong>
                 </p>
-                <br>
-                <div class="is-centered">
-                    <strong>Relationships</strong>
-                    <div id="network"></div>
-                    <p>
-                        The relationships of <span class="is-italic">{{ spname }}</span> and other bacteria that co-occur in Wikipedia and PubMed articles.
-                    </p>
-                </div>
+                <p>
+                <table class="table is-fullwidth is-striped">
+                    <thead>
+                    <th>Keywords</th>
+                    <th>Score</th>
+                    <th>Bacteria</th>
+                    </thead>
+                    <tbody>
+                    {% for w in important_keywords %}
+                    <tr>
+                        <td>
+                            <span class="is-italic">{{ w[0] }}</span>
+                        </td>
+                        <td>{{ w[1] }}</td>
+                        <td>{{ w[2]|length }}</td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                </p>
             </div>
         </div>
     </div>
@@ -132,12 +185,22 @@
         var options = {
             nodes: {
                 shape: 'dot',
-                scaling: {
-                    label: {
-                        min:8,
-                        max:20
-                    }
-                }
+            },
+            physics: {
+                forceAtlas2Based: {
+                    gravitationalConstant: -26,
+                    centralGravity: 0.008,
+                    springLength: 150,
+                    springConstant: 0.3
+                },
+                maxVelocity: 146,
+                solver: 'forceAtlas2Based',
+                timestep: 0.35,
+                stabilization: {iterations: 150}
+            },
+            layout: {
+                randomSeed: 1234,
+                improvedLayout: true,
             }
         };
         network = new vis.Network(container, data, options);

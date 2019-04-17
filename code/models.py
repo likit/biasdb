@@ -1,5 +1,6 @@
 from sqlalchemy import create_engine
-from sqlalchemy import Table, Column, MetaData, Integer, String, ForeignKey, DateTime, PrimaryKeyConstraint
+from sqlalchemy import (Table, Column, MetaData, Integer, String,
+                        ForeignKey, DateTime, PrimaryKeyConstraint, Numeric)
 from sqlalchemy.dialects.postgresql import JSON
 
 '''Medline field reference: https://www.nlm.nih.gov/bsd/mms/medlineelements.html#dp
@@ -52,6 +53,13 @@ organism_wiki_link = Table('organism_wikis', metadata,
                       Column('organism_id', ForeignKey('organisms.id')),
                       Column('link_id', ForeignKey('organisms.id')),
                       )
+
+bigrams = Table('bigrams', metadata,
+                Column('id', Integer(), primary_key=True, autoincrement=True),
+                Column('article_id', ForeignKey('articles.id')),
+                Column('text', String(), index=True),
+                Column('tfidf', Numeric())
+                )
 
 
 if __name__ == '__main__':

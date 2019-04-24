@@ -5,4 +5,4 @@ COPY requirements.txt /app/web/requirements.txt
 WORKDIR /app/web
 RUN pip install -r requirements.txt &&  python -m textblob.download_corpora
 
-CMD ["gunicorn", "--workers", "2", "--bind", "0.0.0.0:5000", "app.main:app"]
+CMD ["gunicorn", "--workers", "3", "--threads", "2", "--bind", "0.0.0.0:5000", "webapp:app"]

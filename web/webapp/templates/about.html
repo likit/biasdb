@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}BIASDB: About{% endblock %}
+{% block page_content %}
+<section class="hero is-warning">
+    <div class="hero-head">
+        <nav class="navbar">
+            <div class="container">
+                <div class="navbar-brand">
+                    <a class="navbar-item" href="/">
+                        <span class="icon is-large">
+                            <i class="fas fa-database fa-2x"></i>
+                        </span>
+                        <span>
+                            <h1 class="title is-size-4 has-text-weight-bold">BIASDB</h1>
+                        </span>
+                    </a>
+                    <span class="navbar-burger burger" data-target="navbarMenuHeroB">
+            <span></span>
+            <span></span>
+            <span></span>
+          </span>
+                </div>
+                <div id="navbarMenuHeroB" class="navbar-menu">
+                    <div class="navbar-end">
+                        <a class="navbar-item" href="/">
+                            Home
+                        </a>
+                        <a class="navbar-item is-active">
+                            About
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </div>
+
+    <div class="hero-body">
+        <div class="container has-text-centered">
+            <p>
+                <img src="{{ url_for('static', filename='img/petri-dish.png') }}" width="120">
+            </p>
+            <p class="title">
+                About BIASDB
+            </p>
+        </div>
+    </div>
+</section>
+<section class="section">
+    <div class="container">
+        <div class="box">
+            <article>
+            <p class="title">History</p>
+            <p class="has-text-justified">
+                    The project started in 2019 with a goal to provide quick access to some useful information about uncommon and common bacteria identified by automated systems for clinical microbiologists to use when they need to evaluate an identification result. The first version of the database contains mostly data collected from online resources such as PubMed and Wikipedia via an automated text mining pipeline. Although the extracted information is quite useful, we are currently expanding our source of data to other online materials and also clinical microbiology laboratories in Thailand to add more data to the database.
+            </p>
+            <hr>
+            <p class="title">Support</p>
+                <ul>
+                    <li>
+                            Center of Excellence on Medical Biotechnology (CEMB), the S&T Postgraduate Education and Research Development Office (PERDO) and the Office of Higher Education Commission (OHEC), Thailand.
+                    </li>
+                    <li>
+                            Faculty of Medical Technology, Mahidol University, Thailand
+                    </li>
+                </ul>
+            <hr>
+            <p class="title">Contributors</p>
+            <p>
+                <p class="subtitle">Administrators</p>
+                <ul>
+                    <li>
+                        <strong>Dr. Likit Preeyanon</strong>:
+                        <span class="icon">
+                            <i class="fas fa-envelope"></i>
+                        </span>&nbsp;likit.pre@mahidol.edu, Faculty of Medical Technology, Mahidol University
+                    </li>
+                </ul>
+            </p>
+            </article>
+        </div>
+    </div>
+</section>
+{% endblock %}

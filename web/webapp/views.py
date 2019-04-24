@@ -320,3 +320,8 @@ def show_profile(bactid=None):
                            important_keywords=important_keywords,
                            bact_related_articles=bact_related_articles,
                            )
+
+
+@app.route('/about')
+def about():
+    return render_template('about.html')

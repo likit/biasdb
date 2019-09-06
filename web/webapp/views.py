@@ -273,14 +273,19 @@ def show_profile(bactid=None):
             species_article_links[Species(lnk[2], lnk[1].capitalize())].add(lnk[0])
 
     try:
-        wiki_summary = wikipedia.summary(bacteria.species.capitalize(), sentences=10)
+        wiki_summary = wikipedia.summary(
+                            bacteria.species.capitalize(),
+                            sentences=20)
         wiki_page = wikipedia.page(bacteria.species.capitalize())
     except (wikipedia.exceptions.PageError, wikipedia.exceptions.DisambiguationError):
         wiki_summary = 'Wikipedia Summary not Available'
         wiki_page = None
         gram_stain = None
     else:
-        gram_stain = gram_pattern.findall(wiki_summary)[0].lower()
+        try:
+            gram_stain = gram_pattern.findall(wiki_summary)[0].lower()
+        except IndexError:
+            gram_stain = None
 
     article_timeline = {}
     years = range(2000, datetime.now().year + 1)

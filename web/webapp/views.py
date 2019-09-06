@@ -1,7 +1,7 @@
 import os
 from collections import defaultdict
 from . import app
-from flask import render_template, url_for
+from flask import render_template, url_for, jsonify
 from sqlalchemy import create_engine, MetaData, Table
 from sqlalchemy.sql import select, func, and_
 import wikipedia
@@ -55,34 +55,44 @@ def get_summary():
     return data
 
 
+@app.route('/api/v1/organisms/')
+def api_get_organisms():
+    organism_list = get_organism_list()
+    return jsonify(organism_list)
+
+
 def get_organism_list():
     columns = [articles.c.pmid, articles.c.pubyear, articles.c.term,
-               organisms.c.species, organisms.c.id, sentences.c.text]
-    s = select(columns).select_from(org_articles.join(sentences).join(articles).join(organisms))
+               organisms.c.species, organisms.c.id]
+    s = select(columns).select_from(org_articles.join(articles).join(organisms))
     result = connection.execute(s).fetchall()
-    data = []
+    _data = {}
     n = 0
     for row in result:
-        pmid, year, terms, spname, spid, sentence = row
+        pmid, year, terms, spname, spid = row
         s = select([articles]).where(articles.c.pmid == pmid)
         rp = connection.execute(s)
         article = rp.first()
         for term in row[2].split(','):
             n += 1
-            item = {
-                'id': n,
-                'spid': spid,
-                'spname': spname.capitalize(),
-                'term': term,
-                'pmid': article['pmid'],
-                'title': article['data']['TI'],
-                'sentence': sentence,
-                'year': year,
-                'authors': ','.join(article['data']['AU']),
-                'journal': article['data']['TA'],
-            }
-            data.append(item)
-    return data
+            if (spid, spname) not in _data:
+                item = {
+                    'id': n,
+                    'spid': spid,
+                    'spname': spname.capitalize(),
+                    'term': term,
+                    'pmid': article['pmid'],
+                    'title': article['data']['TI'],
+                    'year': year,
+                    'authors': ','.join(article['data']['AU']),
+                    'journal': article['data']['TA'],
+                    'count': 1
+                }
+                _data[(spid, spname)] = item
+            else:
+                _data[(spid, spname)]['count'] += 1
+
+    return [item for item in _data.values()]
 
 vectorizer_word = TfidfVectorizer(stop_words='english', ngram_range=(1,1), analyzer='word', min_df=1, max_df=0.8)
 all_abstracts = []

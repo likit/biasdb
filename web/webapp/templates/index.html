@@ -167,9 +167,11 @@
                 </b-field>
                 <b-table
                         :data="fltOrgList"
+                        :loading="isLoading"
+                        default-sort="count"
                         ref="table"
                         paginated
-                        per-page="10"
+                        per-page="20"
                         detailed
                         detail-key="id"
                         aria-next-label="Next page"
@@ -189,15 +191,15 @@
                         <b-table-column field="year" label="Year" numeric sortable>
                             << props.row.year >>
                         </b-table-column>
+                        <b-table-column field="count" label="Count" numeric sortable>
+                            << props.row.count >>
+                        </b-table-column>
                     </template>
                     <template slot="detail" slot-scope="props">
                         <article class="media">
                             <article class="media-content">
                                 <div class="content">
                                     <p><strong><< props.row.title >></strong><br>
-                                        <span class="icon"><i class="fas fa-quote-left"></i></span>
-                                        <small><< props.row.sentence >></small>
-                                        <span class="icon"><i class="fas fa-quote-right"></i></span>
                                         <br>
                                         <small><< props.row.authors >></small>&nbsp;<small><< props.row.journal >>
                                         </small>
@@ -225,21 +227,25 @@
         'delimiters': ['<<', '>>'],
         data() {
             return {
-                orgList: {{ organism_list | tojson | safe }},
-            query: '',
-                Biotyper
-        :
-            true,
-                VitekMS
-        :
-            true,
-                Vitek2
-        :
-            true
-        }
+              orgList: [],
+              query: '',
+              Biotyper : true,
+              VitekMS : true,
+              Vitek2 : true,
+              isLoading : true,
+          }
+        },
+        mounted() {
+            var self = this;
+            axios.get('{{ url_for("api_get_organisms") }}')
+            .then(function(response) {
+              self.orgList = response.data;
+              self.isLoading = false;
+            });
         },
         computed: {
-            fltOrgList: function () {
+          fltOrgList: function() {
+            if(this.orgList.length > 0) {
                 return this.orgList.filter((option) => {
                     var terms = [];
                     if (this.Biotyper) {
@@ -256,7 +262,9 @@
                     return included && match;
                 })
             }
-        }
+            else { return []; }
+          }
+        },
     })
 </script>
 {% endblock %}

@@ -108,12 +108,26 @@
                 <p>
                     <strong>Wikipedia Summary</strong>
                 </p>
-                <p class="has-text-justified">
+                {% if gram_stain %}
+                <div class="field is-grouped is-grouped-multiline">
+                  <div class="control">
+                    <div class="tags has-addons">
+                      <span class="tag is-dark">Gram stain</span>
+                      {% if gram_stain=='positive' %}
+                      <span class="tag is-primary">{{ gram_stain }}</span>
+                      {% else %}
+                      <span class="tag is-danger">{{ gram_stain }}</span>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+                {% endif %}
+                <div class="has-text-justified">
                     {{ wiki_summary }}
                     {% if wiki_page %}
                     <small><a href="{{ wiki_page.url }}" class="is-small button is-info">Read more</a></small>
                     {% endif %}
-                </p>
+                </div>
                 <br>
                 <p>
                     <strong>Related Bacteria from PubMed Articles</strong>

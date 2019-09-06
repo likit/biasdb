@@ -1,4 +1,6 @@
 import os
+import re
+import random
 from collections import defaultdict
 from . import app
 from flask import render_template, url_for, jsonify
@@ -8,7 +10,8 @@ import wikipedia
 from collections import namedtuple
 from datetime import datetime
 from sklearn.feature_extraction.text import TfidfVectorizer
-import random
+
+gram_pattern = re.compile('[Gg]ram[\s,-](positive|negative)')
 
 Species = namedtuple('Species', ['id', 'spname'])
 
@@ -275,6 +278,9 @@ def show_profile(bactid=None):
     except (wikipedia.exceptions.PageError, wikipedia.exceptions.DisambiguationError):
         wiki_summary = 'Wikipedia Summary not Available'
         wiki_page = None
+        gram_stain = None
+    else:
+        gram_stain = gram_pattern.findall(wiki_summary)[0].lower()
 
     article_timeline = {}
     years = range(2000, datetime.now().year + 1)
@@ -329,6 +335,7 @@ def show_profile(bactid=None):
                            years=list(years),
                            important_keywords=important_keywords,
                            bact_related_articles=bact_related_articles,
+                           gram_stain=gram_stain,
                            )
 
 

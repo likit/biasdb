@@ -186,6 +186,7 @@ def show_profile(bactid=None):
     abstract_recs = defaultdict(set)
 
     bact_related_articles = []
+    bact_related_article_ids = set()
     for row in connection.execute(
             select([articles.c.id.label('pid'),
                     articles.c.data['AB'].label('abstract'),
@@ -198,7 +199,9 @@ def show_profile(bactid=None):
                     organisms.c.species]).select_from(
                 articles.join(org_articles).join(organisms)).where(
                 org_articles.c.organism_id == bactid)):
-        bact_related_articles.append(row)
+        if row.pid not in bact_related_article_ids:
+            bact_related_articles.append(row)
+            bact_related_article_ids.add(row.pid)
 
         for s in connection.execute(select(
                 [org_articles, organisms.c.species, organisms.c.id.label('oid')]) \

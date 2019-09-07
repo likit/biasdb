@@ -309,8 +309,12 @@ def show_profile(bactid=None):
             article_timeline[row.species][row.pubyear] += 1
 
     article_timeline_data = []
-    if len(article_links) > 4:
-        sp_choices = random.choices(list(article_timeline), k=4)
+    article_timeline_list = list(article_timeline)
+    if bacteria.species in article_timeline_list:
+        article_timeline_list.remove(bacteria.species)
+    if len(article_timeline_list) > 4:
+        random.shuffle(article_timeline_list)
+        sp_choices = article_timeline_list[:4]
     else:
         sp_choices = list(article_timeline)
     sp_choices.append(bacteria.species)

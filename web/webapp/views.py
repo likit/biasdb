@@ -319,7 +319,7 @@ def show_profile(bactid=None):
         random.shuffle(article_timeline_list)
         sp_choices = article_timeline_list[:4]
     else:
-        sp_choices = list(article_timeline)
+        sp_choices = article_timeline_list
     sp_choices.append(bacteria.species)
     colors = [
         'rgb(254, 178, 54)',

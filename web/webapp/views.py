@@ -1,6 +1,7 @@
 import os
 import re
 import random
+import pickle
 from collections import defaultdict
 from . import app
 from flask import render_template, url_for, jsonify
@@ -8,6 +9,7 @@ from sqlalchemy import create_engine, MetaData, Table
 from sqlalchemy.sql import select, func, and_
 import wikipedia
 from collections import namedtuple
+from wordcloud import WordCloud, STOPWORDS, ImageColorGenerator
 from datetime import datetime
 from sklearn.feature_extraction.text import TfidfVectorizer
 
@@ -32,6 +34,24 @@ bigram_tbl = Table('bigrams', metadata, autoload=True, autoload_with=engine)
 bigram_idf = {}
 for bg in connection.execute(select([bigram_tbl])):
     bigram_idf[bg.text] = bg.tfidf
+
+tfidf_vector_filepath = os.path.join(app.root_path, 'tfidf_vector.pickle')
+if os.path.exists(tfidf_vector_filepath):
+    with open(tfidf_vector_filepath, 'rb') as tfidf_vector_file:
+        vectorizer_word = pickle.load(tfidf_vector_file)
+else:
+    vectorizer_word = TfidfVectorizer(stop_words='english',
+                                      ngram_range=(1,1),
+                                      analyzer='word',
+                                      min_df=1,
+                                      max_df=0.8)
+    all_abstracts = []
+    for rp in connection.execute(select([articles.c.data['AB'].label('abstract')])):
+        all_abstracts.append(rp.abstract or '')
+
+    vectorizer_word.fit(all_abstracts)
+    with open(tfidf_vector_filepath, 'wb') as tfidf_vector_file:
+        pickle.dump(vectorizer_word, tfidf_vector_file)
 
 
 def get_summary():
@@ -97,12 +117,6 @@ def get_organism_list():
 
     return [item for item in _data.values()]
 
-vectorizer_word = TfidfVectorizer(stop_words='english', ngram_range=(1,1), analyzer='word', min_df=1, max_df=0.8)
-all_abstracts = []
-for rp in connection.execute(select([articles.c.data['AB'].label('abstract')])):
-    all_abstracts.append(rp.abstract or '')
-
-vectorizer_word.fit(all_abstracts)
 
 def calculate_normalized_idf(bigram):
     bividf = bigram_idf[bigram]
@@ -349,6 +363,37 @@ def show_profile(bactid=None):
                            bact_related_articles=bact_related_articles,
                            gram_stain=gram_stain,
                            )
+
+@app.route('/api/v1.0/wordcloud')
+def get_wordcloud():
+    year = int(request.args.get('year'))
+    PubTable = Table('pubs', metadata, autoload=True, autoload_with=engine)
+    abstracts = []
+
+    s = select([PubTable])
+    for row in conn.execute(s):
+        if row.pub_date.year == year:
+            try:
+                abstract = row.data['abstracts-retrieval-response']['coredata']['dc:description']
+            except KeyError:
+                continue
+            abstract = [token.lower() for token in regexp_tokenize(abstract, '[^\d\W\s]{3,}') if
+                        token.lower() not in stop_words]
+            abstracts.append(' '.join(abstract))
+
+    img = BytesIO()
+    wordcloud = WordCloud(
+        background_color='white',
+        stopwords=stop_words,
+        max_words=200,
+        max_font_size=40,
+        random_state=42,
+        width=800,
+        height=400
+    ).generate(str(abstracts))
+    wordcloud.to_image().save(img, 'png')
+    img.seek(0)
+    return send_file(img, mimetype='image/png')
 
 
 @app.route('/about')

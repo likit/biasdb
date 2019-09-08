@@ -141,6 +141,11 @@
                 </h2>
             </div>
         </div>
+        <div>
+        {% for word, tfidf in top_words %}
+        <a class="tag" href="{{ url_for('search_word', query=word) }}">{{ word }}</a>
+        {% endfor%}
+        </div>
     </div>
 </section>
 <section class="section">

@@ -2,9 +2,11 @@ import os
 import re
 import random
 import pickle
+from io import BytesIO
 from collections import defaultdict
 from . import app
-from flask import render_template, url_for, jsonify
+from flask import (render_template, url_for, jsonify,
+                   send_file, redirect)
 from sqlalchemy import create_engine, MetaData, Table
 from sqlalchemy.sql import select, func, and_
 import wikipedia
@@ -12,9 +14,11 @@ from collections import namedtuple
 from wordcloud import WordCloud, STOPWORDS, ImageColorGenerator
 from datetime import datetime
 from sklearn.feature_extraction.text import TfidfVectorizer
+from nltk.corpus import stopwords
+from nltk import regexp_tokenize, word_tokenize
 
+stop_words = set(stopwords.words("english"))
 gram_pattern = re.compile('[Gg]ram[\s,-](positive|negative)')
-
 Species = namedtuple('Species', ['id', 'spname'])
 
 POSTGRES_PASSWORD = os.environ.get('POSTGRES_PASSWORD')
@@ -161,9 +165,16 @@ def index():
     s = select([func.count(articles.c.pmid)])
     rp = connection.execute(s)
     articles_count = rp.scalar()
+    tfidf_values = []
+    for w, i in vectorizer_word.vocabulary_.items():
+        tfidf_values.append((w, vectorizer_word.idf_[i]))
+
+    top_words = sorted(tfidf_values, key=lambda x: x[1], reverse=True)[:100]
     return render_template('index.html', summary=summary,
                            organism_list=organism_list,
-                           articles_count=articles_count)
+                           articles_count=articles_count,
+                           top_words=top_words,
+                          )
 
 
 @app.route('/bacteria/profile/<int:bactid>')
@@ -202,7 +213,7 @@ def show_profile(bactid=None):
     bact_related_articles = []
     bact_related_article_ids = set()
     for row in connection.execute(
-            select([articles.c.id.label('pid'),
+            select([articles.c.pmid.label('pid'),
                     articles.c.data['AB'].label('abstract'),
                     articles.c.data['TI'].label('title'),
                     articles.c.data['AU'].label('authors'),
@@ -364,33 +375,61 @@ def show_profile(bactid=None):
                            gram_stain=gram_stain,
                            )
 
-@app.route('/api/v1.0/wordcloud')
-def get_wordcloud():
-    year = int(request.args.get('year'))
-    PubTable = Table('pubs', metadata, autoload=True, autoload_with=engine)
-    abstracts = []
 
-    s = select([PubTable])
-    for row in conn.execute(s):
-        if row.pub_date.year == year:
-            try:
-                abstract = row.data['abstracts-retrieval-response']['coredata']['dc:description']
-            except KeyError:
-                continue
-            abstract = [token.lower() for token in regexp_tokenize(abstract, '[^\d\W\s]{3,}') if
-                        token.lower() not in stop_words]
-            abstracts.append(' '.join(abstract))
+@app.route('/search/<query>')
+def search_word(query):
+    s = select([bigram_tbl.c.text, organisms.c.id]).select_from(
+            bigram_tbl.join(org_articles,
+            org_articles.c.article_id==bigram_tbl.c.article_id)\
+            .join(organisms, organisms.c.id==org_articles.c.organism_id))
+    s = s.where(bigram_tbl.c.text.like('%' + query + '%'))
+    print(s)
+    rec = connection.execute(s).fetchone()
+    if rec:
+        return redirect(url_for('show_profile', bactid=rec[1]))
+    else:
+        return redirect(url_for('index'))
+
+
+@app.route('/api/v1.0/wordcloud/<int:bactid>')
+def get_wordcloud(bactid):
+    bact_related_articles = []
+    bact_related_article_ids = set()
+    for row in connection.execute(
+            select([articles.c.pmid.label('pid'),
+                    articles.c.data['AB'].label('abstract'),
+                    articles.c.data['TI'].label('title'),
+                    articles.c.data['AU'].label('authors'),
+                    articles.c.data['TA'].label('journal'),
+                    articles.c.pubyear,
+                    org_articles.c.article_id,
+                    org_articles.c.organism_id,
+                    organisms.c.species]).select_from(
+                articles.join(org_articles).join(organisms)).where(
+                org_articles.c.organism_id == bactid)):
+        if row.pid not in bact_related_article_ids:
+            bact_related_articles.append(row)
+            bact_related_article_ids.add(row.pid)
+
+    all_abstracts = []
+    for article in bact_related_articles:
+        if article.abstract:
+            abstract = [token.lower().strip() for token in article.abstract.split() if
+                            token.lower().strip() not in stop_words]
+        else:
+            abstract = ''
+        all_abstracts.append(' '.join(abstract))
 
     img = BytesIO()
     wordcloud = WordCloud(
         background_color='white',
         stopwords=stop_words,
-        max_words=200,
-        max_font_size=40,
+        max_words=100,
+        max_font_size=50,
         random_state=42,
-        width=800,
-        height=400
-    ).generate(str(abstracts))
+        width=600,
+        height=250
+    ).generate(str(all_abstracts))
     wordcloud.to_image().save(img, 'png')
     img.seek(0)
     return send_file(img, mimetype='image/png')

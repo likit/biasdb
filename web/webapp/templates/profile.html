@@ -78,6 +78,9 @@
                     <span>The number of articles of up to five randomly selected bacteria are shown as a timeline from 2000-present.</span>
                 </p>
                 <br>
+                <strong>Article Abstract Wordcloud</strong>
+                <p><img src="{{ url_for('get_wordcloud', bactid=bacteria.id) }}" width=600 height=250></p>
+                <br>
                 <p>
                     <table class="table is-narrow">
                         <thead>

@@ -72,14 +72,14 @@
         </div>
         <div class="columns">
             <div class="column">
+                <strong>Article Abstract Word Cloud</strong>
+                <p><img src="{{ url_for('get_wordcloud', bactid=bacteria.id) }}" width=600 height=250></p>
+                <br>
                 <p>
                     <strong>PubMed Article Timeline</strong>
                     <canvas id="timeline"></canvas>
                     <span>The number of articles of up to five randomly selected bacteria are shown as a timeline from 2000-present.</span>
                 </p>
-                <br>
-                <strong>Article Abstract Wordcloud</strong>
-                <p><img src="{{ url_for('get_wordcloud', bactid=bacteria.id) }}" width=600 height=250></p>
                 <br>
                 <p>
                     <table class="table is-narrow">
@@ -167,7 +167,9 @@
                     {% for w in important_keywords %}
                     <tr>
                         <td>
-                            <span class="is-italic">{{ w[0] }}</span>
+                            <span class="is-italic">
+                              <a href="/search/{{ w[0] }}" class="is-text">{{ w[0] }}</a>
+                            </span>
                         </td>
                         <td>{{ w[1] }}</td>
                         <td>{{ w[2]|length }}</td>

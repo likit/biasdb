@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}BIASDB: Timeline{% endblock %}
+
+{% block page_content %}
+<section class="hero is-warning">
+    <div class="hero-head">
+        <nav class="navbar">
+            <div class="container">
+                <div class="navbar-brand">
+                    <a class="navbar-item" href="/">
+                        <span class="icon is-large">
+                            <i class="fas fa-database fa-2x"></i>
+                        </span>
+                        <span>
+                            <h1 class="title is-size-4 has-text-weight-bold">BIASDB</h1>
+                        </span>
+                    </a>
+                    <span class="navbar-burger burger" data-target="navbarMenuHeroB">
+            <span></span>
+            <span></span>
+            <span></span>
+          </span>
+                </div>
+                <div id="navbarMenuHeroB" class="navbar-menu">
+                    <div class="navbar-end">
+                        <a class="navbar-item is-active" href="/">
+                            Home
+                        </a>
+                        <a class="navbar-item" href="/about">
+                            About
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </div>
+
+    <div class="hero-body">
+        <div class="container has-text-centered">
+            <img src="{{ url_for('static', filename='img/bacteria-2.png') }}" width="100">
+            <p class="title">
+              {{ platform }}
+            </p>
+        </div>
+    </div>
+</section>
+<div class="section">
+    <div class="container">
+        <div class="columns">
+            <div class="column">
+                <div class="is-centered">
+                  <h1 class="title">Bacteria Timeline</h1>
+                  <div class="timeline">
+                    <header class="timeline-header">
+                      <span class="tag is-medium is-primary">End</span>
+                    </header>
+                    {% for event in timeline %}
+                    <div class="timeline-item">
+                      <div class="timeline-marker"></div>
+                      <div class="timeline-content">
+                        <p class="heading">{{ event[0] }}</p>
+                        <p>{{ event[1] }}</p>
+                      </div>
+                    </div>
+                    {% endfor %}
+                    <div class="timeline-header">
+                      <span class="tag is-medium is-primary">Start</span>
+                    </div>
+</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

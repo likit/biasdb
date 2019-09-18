@@ -1,10 +1,15 @@
 import sys
+import os
 from Bio import Entrez
 from Bio import Medline
 from sqlalchemy import create_engine, MetaData, Table
 from sqlalchemy.sql import select, insert, update
 
-engine = create_engine('postgres+psycopg2://likit@localhost/bactwatch')
+POSTGRES_PASSWORD = os.environ.get('POSTGRES_PASSWORD')
+DB_NAME = os.environ.get('DB_NAME')
+
+engine = create_engine('postgres+psycopg2://postgres:{}@pg/{}'\
+                       .format(POSTGRES_PASSWORD, DB_NAME))
 connection = engine.connect()
 
 metadata = MetaData()

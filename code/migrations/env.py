@@ -15,6 +15,7 @@ basedir = os.path.split(os.path.dirname(os.path.abspath(__file__)))[0]
 sys.path.append(basedir)
 
 DB_PASS = os.environ.get('POSTGRES_PASSWORD')
+DB_NAME = os.environ.get('DB_NAME')
 
 import models
 
@@ -22,7 +23,9 @@ import models
 # access to the values within the .ini file in use.
 config = context.config
 
-config.set_main_option('sqlalchemy.url', 'postgresql+psycopg2://postgres:{}@pg/bactwatch'.format(DB_PASS))
+config.set_main_option('sqlalchemy.url',
+                       'postgresql+psycopg2://postgres:{}@pg/{}'\
+                       .format(DB_PASS, DB_NAME))
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

@@ -5,8 +5,10 @@ from sqlalchemy.sql import select, insert
 from nltk.tokenize import sent_tokenize
 
 POSTGRES_PASSWORD = os.environ.get('POSTGRES_PASSWORD')
+DB_NAME = os.environ.get('DB_NAME')
 
-engine = create_engine('postgres+psycopg2://postgres:{}@pg/bactwatch'.format(POSTGRES_PASSWORD))
+engine = create_engine('postgres+psycopg2://postgres:{}@pg/{}'\
+                       .format(POSTGRES_PASSWORD, DB_NAME))
 connection = engine.connect()
 
 metadata = MetaData()

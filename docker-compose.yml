@@ -12,6 +12,7 @@ services:
       - FLASK_DEBUG
       - POSTGRES_PASSWORD
       - SECRET_KEY
+      - DB_NAME
     volumes:
       - ./web/:/app/web
   analytics:
@@ -20,6 +21,7 @@ services:
       - pg
     environment:
       - POSTGRES_PASSWORD
+      - DB_NAME
     volumes:
       - ./code:/app/code
   pg:

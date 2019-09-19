@@ -7,7 +7,7 @@ from collections import defaultdict
 from . import app
 from flask import (render_template, url_for, jsonify,
                    send_file, redirect)
-from sqlalchemy import create_engine, MetaData, Table
+from sqlalchemy import create_engine, MetaData, Table, desc
 from sqlalchemy.sql import select, func, and_
 import wikipedia
 from collections import namedtuple
@@ -22,8 +22,10 @@ gram_pattern = re.compile('[Gg]ram[\s,-](positive|negative)')
 Species = namedtuple('Species', ['id', 'spname'])
 
 POSTGRES_PASSWORD = os.environ.get('POSTGRES_PASSWORD')
+DB_NAME = os.environ.get('DB_NAME')
 
-engine = create_engine('postgresql+psycopg2://postgres:{}@pg/bactwatch'.format(POSTGRES_PASSWORD))
+engine = create_engine('postgresql+psycopg2://postgres:{}@pg/{}'\
+                       .format(POSTGRES_PASSWORD, DB_NAME))
 connection = engine.connect()
 metadata = MetaData()
 
@@ -138,12 +140,17 @@ def index():
     data = get_summary()
     organism_list = get_organism_list()
     summary = {
-        'VITEK MS': {
+        'vitek ms': {
             'articles': set(),
             'years': set(),
             'organisms': set(),
         },
-        'VITEK 2': {
+        'vitek 2': {
+            'articles': set(),
+            'years': set(),
+            'organisms': set(),
+        },
+        'vitek2': {
             'articles': set(),
             'years': set(),
             'organisms': set(),
@@ -165,15 +172,10 @@ def index():
     s = select([func.count(articles.c.pmid)])
     rp = connection.execute(s)
     articles_count = rp.scalar()
-    tfidf_values = []
-    for w, i in vectorizer_word.vocabulary_.items():
-        tfidf_values.append((w, vectorizer_word.idf_[i]))
 
-    top_words = sorted(tfidf_values, key=lambda x: x[1], reverse=True)[:100]
     return render_template('index.html', summary=summary,
                            organism_list=organism_list,
                            articles_count=articles_count,
-                           top_words=top_words,
                           )
 
 
@@ -293,7 +295,11 @@ def show_profile(bactid=None):
                 },
             })
 
-    common_links = set(wiki_links.keys()).intersection(set(article_links.keys()))
+    if wiki_links:
+        common_links = set(wiki_links.keys()).intersection(set(article_links.keys()))
+    else:
+        common_links = set(article_links.keys())
+
     species_article_links = defaultdict(set)
     for sp in common_links:
         the_links = article_links[sp]
@@ -303,9 +309,11 @@ def show_profile(bactid=None):
     try:
         wiki_summary = wikipedia.summary(
                             bacteria.species.capitalize(),
-                            sentences=20)
+                            sentences=30)
         wiki_page = wikipedia.page(bacteria.species.capitalize())
-    except (wikipedia.exceptions.PageError, wikipedia.exceptions.DisambiguationError):
+    except (wikipedia.exceptions.PageError,
+            wikipedia.exceptions.DisambiguationError,
+            wikipedia.exceptions.WikipediaException):
         wiki_summary = 'Wikipedia Summary not Available'
         wiki_page = None
         gram_stain = None
@@ -316,25 +324,29 @@ def show_profile(bactid=None):
             gram_stain = None
 
     article_timeline = {}
-    years = range(2000, datetime.now().year + 1)
-    for sid in common_links:
+    endyear = datetime.now().year + 1
+    years = range(2000, endyear)
+    for sid in set(article_links.keys()):
         if sid == bactid:
             continue
-        s = select([organisms.c.species, articles.c.pubyear]).select_from(
-            articles.join(org_articles).join(organisms)).where(org_articles.c.organism_id == sid)
+        s = select([organisms.c.species,
+                    articles.c.pubyear, articles.c.pmid])
+        s = s.select_from(articles.join(org_articles).join(organisms))
+        s = s.where(org_articles.c.organism_id == sid)
         for row in connection.execute(s):
-            if row.pubyear > 1999:
+            if row.pubyear > 1999 and row.pubyear < endyear:
                 if row.species not in article_timeline:
-                    article_timeline[row.species] = dict([(y, 0) for y in years])
-                article_timeline[row.species][row.pubyear] += 1
+                    article_timeline[row.species] = dict([(y, set()) for y in years])
+                article_timeline[row.species][row.pubyear].add(row.pmid)
 
-    s = select([organisms.c.species, articles.c.pubyear]).select_from(
-        articles.join(org_articles).join(organisms)).where(org_articles.c.organism_id == bactid)
+    s = select([organisms.c.species, articles.c.pubyear, articles.c.pmid])
+    s = s.select_from(articles.join(org_articles).join(organisms))
+    s = s.where(org_articles.c.organism_id == bactid)
     for row in connection.execute(s):
-        if row.pubyear > 1999:
+        if row.pubyear > 1999 and row.pubyear < endyear:
             if row.species not in article_timeline:
-                article_timeline[row.species] = dict([(y, 0) for y in years])
-            article_timeline[row.species][row.pubyear] += 1
+                article_timeline[row.species] = dict([(y, set()) for y in years])
+            article_timeline[row.species][row.pubyear].add(row.pmid)
 
     article_timeline_data = []
     article_timeline_list = list(article_timeline)
@@ -357,7 +369,7 @@ def show_profile(bactid=None):
     for n, spname in enumerate(sp_choices):
         article_timeline_data.append({
             'label': spname.capitalize(),
-            'data': [article_timeline[spname][y] for y in years],
+            'data': [len(article_timeline[spname][y]) for y in years],
             'backgroundColor': colors[n],
             'borderColor': colors[n],
             'fill': False
@@ -378,12 +390,11 @@ def show_profile(bactid=None):
 
 @app.route('/search/<query>')
 def search_word(query):
-    s = select([bigram_tbl.c.text, organisms.c.id]).select_from(
-            bigram_tbl.join(org_articles,
-            org_articles.c.article_id==bigram_tbl.c.article_id)\
-            .join(organisms, organisms.c.id==org_articles.c.organism_id))
-    s = s.where(bigram_tbl.c.text.like('%' + query + '%'))
-    print(s)
+    s = select([bigram_tbl.c.text, organisms.c.id])
+    s = s.select_from(bigram_tbl.join(org_articles,
+                        org_articles.c.article_id==bigram_tbl.c.article_id)\
+                      .join(organisms, organisms.c.id==org_articles.c.organism_id))
+    s = s.where(bigram_tbl.c.text==query.lower())
     rec = connection.execute(s).fetchone()
     if rec:
         return redirect(url_for('show_profile', bactid=rec[1]))
@@ -412,10 +423,21 @@ def get_wordcloud(bactid):
             bact_related_article_ids.add(row.pid)
 
     all_abstracts = []
+    _stop_words = stop_words.copy()
+    _stop_words.update(set(['laboratory', 'maldi', 'ms', 'tof', 'however',
+                            'identification', 'method', 'using',
+                            'genus', 'species', 'vitek', 'system',
+                            'therefore', 'sequencing', 'isolate',
+                            'diagnostics', 'technique', 'although',
+                            'system', 'gene', 'routine', '16s', 'rrna',
+                            'important',
+                           ]))
+
     for article in bact_related_articles:
         if article.abstract:
-            abstract = [token.lower().strip() for token in article.abstract.split() if
-                            token.lower().strip() not in stop_words]
+            abstract = [token.lower().strip()
+                        for token in article.abstract.split()
+                        if token.lower() not in _stop_words]
         else:
             abstract = ''
         all_abstracts.append(' '.join(abstract))
@@ -423,8 +445,7 @@ def get_wordcloud(bactid):
     img = BytesIO()
     wordcloud = WordCloud(
         background_color='white',
-        stopwords=stop_words,
-        max_words=100,
+        max_words=50,
         max_font_size=50,
         random_state=42,
         width=600,
@@ -438,3 +459,44 @@ def get_wordcloud(bactid):
 @app.route('/about')
 def about():
     return render_template('about.html')
+
+
+@app.route('/timeline/<platform>')
+def show_timeline(platform):
+    if platform == 'vitek':
+        terms = ['vitek 2', 'vitek2']
+        platform = 'BioMérieux VITEK 2'
+    elif platform == 'vitekms':
+        terms = ['vitek ms']
+        platform = 'BioMérieux VITEK MS'
+    elif platform == 'biotyper':
+        terms = ['biotyper']
+        platform = 'Bruker Biotyper'
+
+    bacteria = set()
+    bacteria_ids = {}
+    data = {}
+    columns = [articles.c.pmid, articles.c.pubyear,
+               articles.c.term, organisms.c.species, organisms.c.id]
+    s = select(columns).select_from(org_articles.join(articles).join(organisms))
+    s = s.order_by(articles.c.pubyear)
+    result = connection.execute(s).fetchall()
+    for row in result:
+        if row[2] in terms:
+            if row[1] not in data:
+                if row[3] not in bacteria:
+                    data[row[1]] = set([row[3]])
+                    bacteria.add(row[3])
+            else:
+                if row[3] not in bacteria:
+                    data[row[1]].add(row[3])
+                    bacteria.add(row[3])
+            bacteria_ids[row[3]] = row[4]
+
+    for yr in data:
+        data[yr] = sorted([s.capitalize() for s in data[yr]])
+
+    data = sorted([(k,', '.join(v)) for k,v in data.items()],
+                  key=lambda x: x[0], reverse=True)
+
+    return render_template('timeline.html', timeline=data, platform=platform)

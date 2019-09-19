@@ -44,7 +44,7 @@
                 Welcome to BIAS Database
             </p>
             <p class="subtitle">
-                Quick access to Bacteria Identified by Automated Systems (BIAS) on <a
+                Quick access to Bacteria Identified by Automated Systems Reported on <a
                     href="https://www.ncbi.nlm.nih.gov/pubmed/"><strong>PubMed</strong></a>
             </p>
             <p class="subtitle is-size-6">
@@ -66,7 +66,14 @@
                         <p class="title is-size-4">Our Goal</p>
                     </div>
                     <p class="has-text-justified">
-                        <span class="has-text-weight-bold">Rationale and Goal:</span>&nbsp;More and more uncommon medically-important bacteria have been identified and published on PubMed thanks to the advanced automated systems. This project aims to collect and extract the information that could be useful for a medical microbiologist who may need information to validate the identification of uncommon bacteria. The database is updated monthly to monitor newly reported bacteria. It currently stores information of bacteria that were possibly identified by VITEK MS, VITEK 2 or Biotyper.
+                        <span class="has-text-weight-bold">Rationale and
+                          Goal:</span>&nbsp;More and more uncommon bacteria
+                        have been identified and published on PubMed thanks to
+                        the advanced automated microbiology systems. This
+                        project aims to collect and extract information that
+                        could be useful for a medical microbiologist who needs
+                        to assess the identification of uncommon bacteria. The
+                        database is updated regularly to monitor newly reported bacteria.
                     </p>
                 </article>
             </div>
@@ -78,7 +85,7 @@
                     <h2 class="title is-size-4">Total Articles : {{ articles_count }}</h2>
                     <h2 class="subtitle is-size-6">
                         <p>
-                            Updated at April 12, 2019
+                            Updated at September 16, 2019
                         </p>
                     </h2>
                 </div>
@@ -88,13 +95,14 @@
             <div class="column">
                 <div class="notification">
                     <div class="has-text-centered">
-                        <h1 class="title is-size-4">VITEK MS</h1>
+                        <h1 class="title is-size-4">BioMérieux VITEK MS</h1>
                         <p>
                         <ul>
-                            <li>Articles ({{ summary['VITEK MS']['articles']|length }})</li>
-                            <li>Years ({{ summary['VITEK MS']['years']|min }}-{{ summary['VITEK MS']['years']|max }})
+                            <li>Articles ({{ summary['vitek ms']['articles']|length }})</li>
+                            <li>Years ({{ summary['vitek ms']['years']|min }}-{{ summary['vitek ms']['years']|max }})
                             </li>
-                            <li>Organisms ({{ summary['VITEK MS']['organisms']|length }})</li>
+                            <li>Organisms ({{ summary['vitek ms']['organisms']|length }})</li>
+                            <li><a href="/timeline/vitekms" class="button">See Timeline</a></li>
                         </ul>
                         </p>
                     </div>
@@ -103,12 +111,13 @@
             <div class="column">
                 <div class="notification">
                     <div class="has-text-centered">
-                        <h1 class="title is-size-4">VITEK 2</h1>
+                        <h1 class="title is-size-4">BioMérieux VITEK 2</h1>
                         <p>
                         <ul>
-                            <li>Articles ({{ summary['VITEK 2']['articles']|length }})</li>
-                            <li>Years ({{ summary['VITEK 2']['years']|min }}-{{ summary['VITEK 2']['years']|max }})</li>
-                            <li>Organisms ({{ summary['VITEK 2']['organisms']|length }})</li>
+                            <li>Articles ({{ summary['vitek 2']['articles']|length + summary['vitek2']['articles']|length }})</li>
+                            <li>Years ({{ summary['vitek 2']['years']|min }}-{{ summary['vitek 2']['years']|max }})</li>
+                            <li>Organisms ({{ summary['vitek 2']['organisms']|length }})</li>
+                            <li><a href="/timeline/vitek" class="button">See Timeline</a></li>
                         </ul>
                         </p>
                     </div>
@@ -117,34 +126,19 @@
             <div class="column">
                 <div class="notification">
                     <div class="has-text-centered">
-                        <h1 class="title is-size-4">Biotyper</h1>
+                        <h1 class="title is-size-4">Bruker Biotyper</h1>
                         <p>
                         <ul>
                             <li>Articles ({{ summary['biotyper']['articles']|length }})</li>
                             <li>Years ({{ summary['biotyper']['years']|min }}-{{ summary['biotyper']['years']|max }})
                             </li>
                             <li>Organisms ({{ summary['biotyper']['organisms']|length }})</li>
+                            <li><a href="/timeline/biotyper" class="button">See Timeline</a></li>
                         </ul>
                         </p>
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="columns">
-            <div class="column">
-                <h2 class="subtitle is-size-7">
-                    <p>
-                        *Articles were searched using keyword "VITEK MS, VITEK 2 and biotyper".
-                        Then they were downloaded and processed using text mining techniques to
-                        extract bacterial names and relevant information.
-                    </p>
-                </h2>
-            </div>
-        </div>
-        <div>
-        {% for word, tfidf in top_words %}
-        <a class="tag" href="{{ url_for('search_word', query=word) }}">{{ word }}</a>
-        {% endfor%}
         </div>
     </div>
 </section>
@@ -173,7 +167,7 @@
                 <b-table
                         :data="fltOrgList"
                         :loading="isLoading"
-                        default-sort="count"
+                        default-sort=["year","desc"]
                         ref="table"
                         paginated
                         per-page="20"
@@ -257,10 +251,11 @@
                         terms.push('biotyper');
                     }
                     if (this.VitekMS) {
-                        terms.push('VITEK MS');
+                        terms.push('vitek ms');
                     }
                     if (this.Vitek2) {
-                        terms.push('VITEK 2');
+                        terms.push('vitek 2');
+                        terms.push('vitek2');
                     }
                     var included = terms.indexOf(option.term) >= 0;
                     var match = option.spname.toString().toLowerCase().indexOf(this.query.toLowerCase()) >= 0;

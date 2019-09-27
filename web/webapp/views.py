@@ -139,35 +139,42 @@ def calculate_normalized_idf(bigram):
 def index():
     data = get_summary()
     organism_list = get_organism_list()
-    summary = {
-        'vitek ms': {
-            'articles': set(),
-            'years': set(),
-            'organisms': set(),
-        },
-        'vitek 2': {
-            'articles': set(),
-            'years': set(),
-            'organisms': set(),
-        },
-        'vitek2': {
-            'articles': set(),
-            'years': set(),
-            'organisms': set(),
-        },
-        'biotyper': {
-            'articles': set(),
-            'years': set(),
-            'organisms': set(),
+    summary_filepath = os.path.join(app.root_path, 'summary.pickle')
+    if os.path.exists(summary_filepath):
+        with open(summary_filepath, 'rb') as summary_file:
+            summary = pickle.load(summary_file)
+    else:
+        summary = {
+            'vitek ms': {
+                'articles': set(),
+                'years': set(),
+                'organisms': set(),
+            },
+            'vitek 2': {
+                'articles': set(),
+                'years': set(),
+                'organisms': set(),
+            },
+            'vitek2': {
+                'articles': set(),
+                'years': set(),
+                'organisms': set(),
+            },
+            'biotyper': {
+                'articles': set(),
+                'years': set(),
+                'organisms': set(),
+            }
         }
-    }
-    for term in summary:
-        for spname in data:
-            for year in data[spname]:
-                if term in data[spname][year]['terms']:
-                    summary[term]['articles'].update(data[spname][year]['terms'][term])
-                    summary[term]['years'].add(year)
-                    summary[term]['organisms'].add(spname)
+        for term in summary:
+            for spname in data:
+                for year in data[spname]:
+                    if term in data[spname][year]['terms']:
+                        summary[term]['articles'].update(data[spname][year]['terms'][term])
+                        summary[term]['years'].add(year)
+                        summary[term]['organisms'].add(spname)
+        with open(summary_filepath, 'wb') as summary_file:
+            pickle.dump(summary, summary_file)
 
     s = select([func.count(articles.c.pmid)])
     rp = connection.execute(s)

@@ -21,11 +21,9 @@ stop_words = set(stopwords.words("english"))
 gram_pattern = re.compile('[Gg]ram[\s,-](positive|negative)')
 Species = namedtuple('Species', ['id', 'spname'])
 
-POSTGRES_PASSWORD = os.environ.get('POSTGRES_PASSWORD')
-DB_NAME = os.environ.get('DB_NAME')
+DATABASE_URL = os.environ.get('DATABASE_URL')
 
-engine = create_engine('postgresql+psycopg2://postgres:{}@pg/{}'\
-                       .format(POSTGRES_PASSWORD, DB_NAME))
+engine = create_engine(DATABASE_URL)
 connection = engine.connect()
 metadata = MetaData()
 
